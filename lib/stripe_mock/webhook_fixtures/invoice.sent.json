@@ -29,7 +29,7 @@
       "lines": {
         "data": [
           {
-            "id": "sub_CDqQUvN3MzGURX",
+            "id": "sub_00000000000000",
             "object": "line_item",
             "amount": 1500,
             "currency": "usd",
@@ -60,7 +60,7 @@
             "proration": false,
             "quantity": 1,
             "subscription": null,
-            "subscription_item": "si_CDqQLQNlZuf1cZ",
+            "subscription_item": "si_00000000000000",
             "type": "subscription"
           }
         ],

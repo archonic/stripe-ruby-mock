@@ -299,7 +299,7 @@ module StripeMock
         items: {
           object: 'list',
           data: [{
-            id: 'si_1AwFf62eZvKYlo2C9u6Dhf9',
+            id: 'si_00000000000000',
             created: 1504035973,
             metadata: {},
             object: 'subscription_item',

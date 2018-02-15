@@ -26,13 +26,13 @@
         "object": "list",
         "data": [
           {
-            "id": "si_CDqQLQNlZuf1cZ",
+            "id": "si_00000000000000",
             "object": "subscription_item",
             "created": 1517178879,
             "metadata": {
             },
             "plan": {
-              "id": "2bf80c62-01d6-403d-85d7-d54d9039d140",
+              "id": "example-plan-id",
               "object": "plan",
               "amount": 1500,
               "created": 1517178791,
@@ -47,18 +47,18 @@
               "trial_period_days": 14
             },
             "quantity": 1,
-            "subscription": "sub_CDqQUvN3MzGURX"
+            "subscription": "sub_00000000000000"
           }
         ],
         "has_more": false,
         "total_count": 1,
-        "url": "/v1/subscription_items?subscription=sub_CDqQUvN3MzGURX"
+        "url": "/v1/subscription_items?subscription=sub_00000000000000"
       },
       "livemode": false,
       "metadata": {
       },
       "plan": {
-        "id": "2bf80c62-01d6-403d-85d7-d54d9039d140_00000000000000",
+        "id": "example-plan-id_00000000000000",
         "object": "plan",
         "amount": 1500,
         "created": 1517178791,

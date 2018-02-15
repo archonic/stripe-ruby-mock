@@ -857,7 +857,7 @@ shared_examples 'Customer Subscriptions' do
       expect(subscription.items.object).to eq('list')
       expect(subscription.items.data.class).to eq(Array)
       expect(subscription.items.data.count).to eq(1)
-      expect(subscription.items.data.first.id).to eq('si_1AwFf62eZvKYlo2C9u6Dhf9')
+      expect(subscription.items.data.first.id).to eq('si_00000000000000')
       expect(subscription.items.data.first.created).to eq(1504035973)
       expect(subscription.items.data.first.object).to eq('subscription_item')
       expect(subscription.items.data.first.plan.amount).to eq(999)
