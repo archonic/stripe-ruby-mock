@@ -58,7 +58,7 @@
       "metadata": {
       },
       "plan": {
-        "id": "example-plan-id_00000000000000",
+        "id": "example-plan-id",
         "object": "plan",
         "amount": 1500,
         "created": 1517178791,
