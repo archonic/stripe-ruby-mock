@@ -13,9 +13,12 @@ module StripeMock
       end
 
       def new_charge(route, method_url, params, headers)
-        if params[:idempotency_key] && charges.any?
-          original_charge = charges.values.find { |c| c[:idempotency_key] == params[:idempotency_key]}
-          return charges[original_charge[:id]] if original_charge
+        if headers && headers[:idempotency_key]
+          params[:idempotency_key] = headers[:idempotency_key]
+          if charges.any?
+            original_charge = charges.values.find { |c| c[:idempotency_key] == headers[:idempotency_key]}
+            return charges[original_charge[:id]] if original_charge
+          end
         end
 
         id = new_id('ch')
@@ -41,7 +44,7 @@ module StripeMock
         end
 
         ensure_required_params(params)
-        bal_trans_params = { amount: params[:amount], source: params[:source] }
+        bal_trans_params = { amount: params[:amount], source: id, application_fee: params[:application_fee] }
 
         balance_transaction_id = new_balance_transaction('txn', bal_trans_params)
 
@@ -160,7 +163,7 @@ module StripeMock
       end
 
       def allowed_params(params)
-        allowed = [:description, :metadata, :receipt_email, :fraud_details, :shipping]
+        allowed = [:description, :metadata, :receipt_email, :fraud_details, :shipping, :destination]
 
         # This is a workaround for the way the Stripe API sends params even when they aren't modified.
         # Stipe will include those params even when they aren't modified.

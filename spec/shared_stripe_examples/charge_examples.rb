@@ -163,15 +163,19 @@ shared_examples 'Charge API' do
   end
 
   it "creates a balance transaction" do
+    amount = 300
+    fee = 10
     charge = Stripe::Charge.create({
-      amount: 300,
+      amount: amount,
       currency: 'USD',
-      source: stripe_helper.generate_card_token
+      source: stripe_helper.generate_card_token,
+      application_fee: fee,
     })
     bal_trans = Stripe::BalanceTransaction.retrieve(charge.balance_transaction)
-    expect(bal_trans.amount).to eq(charge.amount)
-    expect(bal_trans.fee).to eq(39)
-    expect(bal_trans.source).to eq(charge.source)
+    expect(bal_trans.amount).to eq(amount)
+    expect(bal_trans.fee).to eq(39 + fee)
+    expect(bal_trans.source).to eq(charge.id)
+    expect(bal_trans.net).to eq(amount - bal_trans.fee)
   end
 
   context 'when conversion rate is set' do
@@ -255,6 +259,23 @@ shared_examples 'Charge API' do
     expect(updated.metadata.to_hash).to eq(charge.metadata.to_hash)
     expect(updated.receipt_email).to eq(charge.receipt_email)
     expect(updated.fraud_details.to_hash).to eq(charge.fraud_details.to_hash)
+  end
+
+  it "updates a stripe charge with no changes" do
+    original = Stripe::Charge.create({
+      amount: 777,
+      currency: 'USD',
+      source: stripe_helper.generate_card_token,
+      description: 'Original description',
+      destination: {
+        account: "acct_SOMEBOGUSID",
+        amount: 150
+      }
+    })
+
+    expect {
+      updated = original.save
+    }.not_to raise_error
   end
 
   it "marks a charge as safe" do
@@ -455,29 +476,34 @@ shared_examples 'Charge API' do
 
   describe "idempotency" do
     let(:customer) { Stripe::Customer.create(email: 'johnny@appleseed.com') }
-    let(:idempotent_charge_params) {{
+    let(:charge_params) {{
       amount: 777,
       currency: 'USD',
       customer: customer.id,
-      capture: true,
+      capture: true
+    }}
+    let(:charge_headers) {{
       idempotency_key: 'onceisenough'
     }}
 
     it "returns the original charge if the same idempotency_key is passed in" do
-      charge1 = Stripe::Charge.create(idempotent_charge_params)
-      charge2 = Stripe::Charge.create(idempotent_charge_params)
+      charge1 = Stripe::Charge.create(charge_params, charge_headers)
+      charge2 = Stripe::Charge.create(charge_params, charge_headers)
 
       expect(charge1).to eq(charge2)
     end
 
-    it "returns different charges if different idempotency_keys are used for each charge" do
-      idempotent_charge_params2 = idempotent_charge_params.clone
-      idempotent_charge_params2[:idempotency_key] = 'thisoneisdifferent'
+    context 'different key' do
+      let(:different_charge_headers) {{
+        idempotency_key: 'thisoneisdifferent'
+      }}
 
-      charge1 = Stripe::Charge.create(idempotent_charge_params)
-      charge2 = Stripe::Charge.create(idempotent_charge_params2)
+      it "returns different charges if different idempotency_keys are used for each charge" do
+        charge1 = Stripe::Charge.create(charge_params, charge_headers)
+        charge2 = Stripe::Charge.create(charge_params, different_charge_headers)
 
-      expect(charge1).not_to eq(charge2)
+        expect(charge1).not_to eq(charge2)
+      end
     end
   end
 

@@ -20,6 +20,7 @@ module StripeMock
       @@handlers.find {|h| method_url =~ h[:route] }
     end
 
+    include StripeMock::RequestHandlers::ExternalAccounts
     include StripeMock::RequestHandlers::Accounts
     include StripeMock::RequestHandlers::Balance
     include StripeMock::RequestHandlers::BalanceTransactions
@@ -41,6 +42,7 @@ module StripeMock
     include StripeMock::RequestHandlers::Tokens
     include StripeMock::RequestHandlers::CountrySpec
     include StripeMock::RequestHandlers::Payouts
+    include StripeMock::RequestHandlers::EphemeralKey
 
     attr_reader :accounts, :balance, :balance_transactions, :bank_tokens, :charges, :coupons, :customers,
                 :disputes, :events, :invoices, :invoice_items, :orders, :plans, :recipients,
@@ -173,7 +175,8 @@ module StripeMock
       amount = params[:amount]
       unless amount.nil?
         # Fee calculation
-        params[:fee] ||= (30 + (amount.abs * 0.029).ceil) * (amount > 0 ? 1 : -1)
+        calculate_fees(params) unless params[:fee]
+        params[:net] = amount - params[:fee]
         params[:amount] = amount * @conversion_rate
       end
       @balance_transactions[id] = Data.mock_balance_transaction(params.merge(id: id))
@@ -193,6 +196,32 @@ module StripeMock
     def to_faraday_hash(hash)
       response = Struct.new(:data)
       response.new(hash)
+    end
+
+    def calculate_fees(params)
+      application_fee = params[:application_fee] || 0
+      params[:fee] = processing_fee(params[:amount]) + application_fee
+      params[:fee_details] = [
+        {
+          amount: processing_fee(params[:amount]),
+          application: nil,
+          currency: params[:currency] || StripeMock.default_currency,
+          description: "Stripe processing fees",
+          type: "stripe_fee"
+        }
+      ]
+      if application_fee
+        params[:fee_details] << {
+          amount: application_fee,
+          currency: params[:currency] || StripeMock.default_currency,
+          description: "Application fee",
+          type: "application_fee"
+        }
+      end
+    end
+
+    def processing_fee(amount)
+      (30 + (amount.abs * 0.029).ceil) * (amount > 0 ? 1 : -1)
     end
   end
 end
